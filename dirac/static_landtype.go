@@ -81,8 +81,15 @@ func prepLandGrant(t *kop.Table, p *prep, g *genPrep) {
 			on = on || a.Kind == kop.AbStatic && a.Static.Kind == kop.StatContinuous && (meets(a.Static.AddSub) || a.Static.AddChosen && basic.Any())
 		}
 	}
-	for i := range t.Overrides {
-		on = on || meets(t.Overrides[i].AddSub)
+	if !on {
+		// Table.Overrides is the pool's list, not the table's (tableReach): an
+		// override no card of this table can apply grants nothing here. Read
+		// table-wide, one Forest beside Ashaya's record in the pool put every
+		// such table on the granted-type views, though nothing could grant.
+		reach := tableReach(t)
+		for i, live := range reach.override {
+			on = on || live && meets(t.Overrides[i].AddSub)
+		}
 	}
 	if !on {
 		return
